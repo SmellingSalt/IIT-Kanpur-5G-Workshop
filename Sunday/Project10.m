@@ -13,13 +13,14 @@ C_HYB=zeros(length(SNRdB),1); %% Capacity of Hybrid MIMO
 C_MIMO= zeros(length(SNRdB),1);%% Capacity of Conventional MIMO
 % G-quantized Array response matrix
 A_T =zeros(t,G);
-A_R=A_T; %% for simplicity
+
 for I=1:G
     dirCos=2/G*(I-1)-1;
     for K=1:t
         A_T(K,I)= 1/sqrt(t)*exp(-1j*pi*(K-1)*dirCos);
     end
 end
+A_R=A_T; %% for simplicity
 for iter1=1:ITER
     fprintf("First loop, iteration %d\n",iter1);
     % generation of channel
@@ -41,31 +42,31 @@ for iter1=1:ITER
     % NORM to meet power constraint
     FBB_NORM=sqrt(Ns)/(norm(FRF*FBB, 'fro'))*FBB; %% normalized precoder
 end
-    for i_snr=1:length(SNRdB)
-        %% MMSE COMBINER
-        np = 10^(-SNRdB(i_snr)/10); %% noise power for signal power 1
-        % optimal unconstrained MMSE combiner for unconstrained precoder
-        % Standard mmse combiner equation
-        Wmmse_opt = H*Fopt*inv(Fopt'*H'*H* Fopt + np*Ns*eye(Ns));
-        % Capacity of optimal unconstrained MIMO precoder/combiner
-        %Standard formula for MIMO capacity
-        C_MIMO(i_snr) = C_MIMO(i_snr) + mimo_capacity(Wmmse_opt'*H*Fopt, 1/Ns*eye(Ns),np*Wmmse_opt'*Wmmse_opt);
-        % optimal unconstrained MMSE combiner for hybrid precoder
-        %Covariance of the recieved vector
-        Ryy=1/Ns*H*FRF*FBB_NORM*FBB_NORM'*FRF'*H' +np*eye(r);
-        
-        %% DESIGNING HYBRID COMBINER 
-        Wmmse_Hyb=H*FRF*FBB_NORM*inv(FBB_NORM'*FRF'*H'*H*FRF*FBB_NORM+np*Ns*eye(Ns));
-        % OMP based receive hybrid combiner design
-        [WBB, WRF] = SOMP_mmW_precoder(Wmmse_Hyb, A_R, Ryy, numRF);
-        % Capacity of OMP-based precoder/combiner
-        C_HYB(i_snr)=C_HYB(i_snr) + mimo_capacity(WBB'* WRF'*H*FRF*FBB_NORM, 1/Ns*eye(Ns),np*WBB'*WRF'*WRF*WBB);
-    end
-    C_MIMO=C_MIMO/ITER; C_HYB=C_HYB/ITER;
-    plot(SNRdB,C_MIMO,'b','linewidth',3.0);
-    hold on;
-    plot(SNRdB,C_HYB,'m -.','linewidth',3.0);
-    grid on; axis tight;
-    xlabel('SNR(dB)'); ylabel('Capacity (b/s/Hz)');
-    legend('Conventional MIMO','Hybrid MIMO'); title('Capacity vs SNR');
-    %end of the code
+for i_snr=1:length(SNRdB)
+    %% MMSE COMBINER
+    np = 10^(-SNRdB(i_snr)/10); %% noise power for signal power 1
+    % optimal unconstrained MMSE combiner for unconstrained precoder
+    % Standard mmse combiner equation
+    Wmmse_opt = H*Fopt*inv(Fopt'*H'*H* Fopt + np*Ns*eye(Ns));
+    % Capacity of optimal unconstrained MIMO precoder/combiner
+    %Standard formula for MIMO capacity
+    C_MIMO(i_snr) = C_MIMO(i_snr) + mimo_capacity(Wmmse_opt'*H*Fopt, 1/Ns*eye(Ns),np*Wmmse_opt'*Wmmse_opt);
+    % optimal unconstrained MMSE combiner for hybrid precoder
+    %Covariance of the recieved vector
+    Ryy=1/Ns*H*FRF*FBB_NORM*FBB_NORM'*FRF'*H' +np*eye(r);
+    
+    %% DESIGNING HYBRID COMBINER
+    Wmmse_Hyb=H*FRF*FBB_NORM*inv((FBB_NORM')*(FRF')*(H')*H*FRF*FBB_NORM+np*Ns*eye(Ns));
+    % OMP based receive hybrid combiner design
+    [WBB, WRF] = SOMP_mmW_precoder(Wmmse_Hyb, A_R, Ryy, numRF);
+    % Capacity of OMP-based precoder/combiner
+    C_HYB(i_snr)=C_HYB(i_snr) + mimo_capacity((WBB')* (WRF')*H*FRF*FBB_NORM, 1/Ns*eye(Ns),np*(WBB')*(WRF')*WRF*WBB);
+end
+C_MIMO=C_MIMO/ITER; C_HYB=C_HYB/ITER;
+plot(SNRdB,abs(C_MIMO),'b','linewidth',3.0);
+hold on;
+plot(SNRdB,abs(C_HYB),'m -.','linewidth',3.0);
+grid on; axis tight;
+xlabel('SNR(dB)'); ylabel('Capacity (b/s/Hz)');
+legend('Conventional MIMO','Hybrid MIMO'); title('Capacity vs SNR');
+%end of the code
