@@ -1,3 +1,5 @@
+%GRAPH ISN'T MATCHING
+
 %Implementation of system model of figure 1 of transaction analysis and
 % design of OFDM/OQAM Systems"
 % Follow the block diagram to understand the code
@@ -32,7 +34,6 @@ end
 
 for jj=1:ITER
     jj
-
     h = 1/sqrt(2)*sqrt(1/L_h)*(randn(1,L_h) + 1i*randn(1,L_h));
     %cHANEL FREQ RESP
     cfr = fft(h,N).'; % Channel frequency response
@@ -75,7 +76,7 @@ for jj=1:ITER
     end
 end
 %% plotting
-Theory_BER = 0.5*(1-sqrt(EsN0./(EsN0+2)));
+Theory_BER=0.5*(1-sqrt(EsN0./(EsN0+2)));
 figure
 semilogy(EsN0dB,Theory_BER,'mx-','LineWidth',2);
 hold on
